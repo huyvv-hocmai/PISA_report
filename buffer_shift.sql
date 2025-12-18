@@ -99,7 +99,44 @@ SELECT
        AND t.`Trạng thái` = 'Completed')) AS `Số lượt còn lại`
 FROM base b;
 
+--=> Version xịn hơn
+WITH tmp AS (
+    SELECT 
+        s.`Mã HS`,
+        s.`Hóa đơn`,
+        s.`Ngày học`,
+        s.Ca,
+        s.`Trạng thái`,
+        s.`Mã CVHT`,
+        r.`Chương trình`,
+        s.`Môn`,
+        s.`Size`
+    FROM schedule s
+    JOIN receipt r ON s.`Hóa đơn` = r.HD
+    WHERE s.`Trạng thái` <> 'Preserved'
+      AND STR_TO_DATE(s.`Ngày học`, '%d/%m/%Y')
+          BETWEEN STR_TO_DATE('08/12/2025', '%d/%m/%Y')
+              AND STR_TO_DATE('15/12/2025', '%d/%m/%Y')
+)
 
+SELECT
+    t.`Mã CVHT`,
+    t.`Ngày học`,
+    t.Ca,
+    t.`Môn`,
+    t.`Size`,
+
+    SUM(t.`Trạng thái` = 'Completed') AS `Số lượt hoàn thành`,
+    COUNT(*)                          AS `Số lượt kế hoạch`,
+    COUNT(*) - SUM(t.`Trạng thái` = 'Completed') AS `Số lượt còn lại`
+
+FROM tmp t
+GROUP BY
+    t.`Mã CVHT`,
+    t.`Ngày học`,
+    t.Ca,
+    t.`Môn`,
+    t.`Size`;
 
 ----
 
