@@ -1,3 +1,4 @@
+WITH student_profile AS (
 SELECT
     ra.`Mã học viên`,
     ra.`Tên học viên`,
@@ -37,4 +38,6 @@ JOIN receipt_progress rp
 WHERE rp.`Mã học sinh` = 'SHN1-07-1027'
 GROUP BY
     ra.`Mã học viên`,
-    ra.`Tên học viên`;
+    ra.`Tên học viên`)
+SELECT count(*) FROM student_profile 
+    ;
