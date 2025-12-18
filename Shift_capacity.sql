@@ -1,3 +1,54 @@
+-- Bảng 3:
+WITH tmp AS (
+    SELECT 
+        s.`Mã HS`,
+        s.`Hóa đơn`,
+        s.`Ngày học`,
+        s.Ca,
+        s.`Trạng thái`,
+        s.`Mã CVHT`,
+        r.`Chương trình`,
+        s.`Môn`,
+        s.`Size`,
+        DAYOFWEEK(str_to_date(s.`Ngày học`, '%d/%m/%Y')) AS 'Thứ'  -- Ngày trong tuần
+    FROM schedule s
+    JOIN receipt r ON s.`Hóa đơn` = r.HD
+    WHERE s.`Trạng thái` <> 'Preserved'
+)
+SELECT
+    t.`Môn`,  -- Môn học
+    t.Size,  -- Kích thước
+    -- Công suất ca KH: Tổng số lượt học theo Ca / Tổng số giáo viên
+    (COUNT(DISTINCT t.`Mã CVHT`) * 4) / NULLIF(COUNT(DISTINCT t.`Mã CVHT`), 0) AS `Công suất ca KH`,
+    -- Tổng lượt TT: Tổng số lượt hoàn thành
+    (SELECT SUM(t2.`Trạng thái` = 'Completed') 
+     FROM tmp t2
+     WHERE t2.`Môn` = t.`Môn`
+       AND t2.`Size` = t.`Size`
+       AND t2.`Trạng thái` = 'Completed') AS `Tổng số lượt TT`,
+    -- Số ca = Tổng bản ghi (hoặc Số GV nếu bạn muốn tính số ca theo giáo viên)
+    COUNT(*) AS `Số ca`,
+    -- Công suất TT = Số ca / Tổng lượt TT
+    NULLIF(COUNT(*), 0) / NULLIF(
+        (SELECT SUM(t2.`Trạng thái` = 'Completed') 
+         FROM tmp t2
+         WHERE t2.`Môn` = t.`Môn`
+           AND t2.`Size` = t.`Size`
+           AND t2.`Trạng thái` = 'Completed'), 0) AS `Công suất TT`,
+    -- Cột theo tuần (7 ngày) từ 30/10/2025
+    FLOOR(DATEDIFF(STR_TO_DATE(t.`Ngày học`, '%d/%m/%Y'), STR_TO_DATE('30/10/2025', '%d/%m/%Y')) / 7) + 1 AS `Tuần`
+FROM tmp t
+WHERE 
+    t.Size = '1 - 4' 
+    AND t.`Môn` = 'V'
+    -- Lọc theo Tuần "30/10/2025 - 5/11/2025"
+    AND FLOOR(DATEDIFF(STR_TO_DATE(t.`Ngày học`, '%d/%m/%Y'), STR_TO_DATE('30/10/2025', '%d/%m/%Y')) / 7) + 1 = 1
+GROUP BY
+    t.`Môn`, t.Size, `Tuần`  -- Nhóm theo Tuần, Môn, và Size
+ORDER BY 
+    t.`Môn`, t.Size, `Tuần`;  -- Sắp xếp theo Tuần
+
+
 -- Bảng 2:
 WITH tmp AS (
     SELECT 
