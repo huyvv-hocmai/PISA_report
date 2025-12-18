@@ -69,8 +69,6 @@ ORDER BY
     ri.`Tháng ghi nhận hóa đơn`,
     ri.`Chương trình`;
 
-
-
 ----------------------- Bảng 1:
 SELECT 
     COUNT(DISTINCT ri.`Mã học viên`) AS `Số học viên mới`,
